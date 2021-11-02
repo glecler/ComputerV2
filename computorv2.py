@@ -10,18 +10,17 @@
 
 from interpreter import *
 
-def prompt():
-    cmd = input("> ")
-    return(cmd)
+def prompt() :
+    cmd = input('> ')
+    return cmd
 
-def main():
+def main() :
     cmd = 0
+    interpreter = Interpreter()
 
-    interpreter = Interpreter(0)
-
-    while cmd != "quit":
+    while cmd != 'quit' :
         cmd = prompt()
-        interpreter.parse(cmd)
+        print(interpreter.parse(cmd))
 
-if __name__ == '__main__':
+if __name__ == '__main__' :
     main()
