@@ -87,11 +87,12 @@ class Error :
 		return Error(self.err_code)
 
 	def __str__(self) :
-		return f'Error : {self.err_msg}\n'
-	
+		return f'Error : {self.err_msg}'
+		
 	def copy(self) :
 		return Error(self.err_code)
 	
+
 class SilentError(Error) :
 	def __str__(self) :
 		return ''

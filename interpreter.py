@@ -6,6 +6,7 @@ from evaluator import *
 from formater import Formater
 from error import Error
 from graph import *
+from solver import *
 
 class Interpreter:
 	
@@ -14,8 +15,12 @@ class Interpreter:
 		self.arglist = []
 		self.history = []
 		self.arglist.append(Imaginaries('i', 0, 1))
+		self.arglist.append(Reals('pi', 3.14159))
+		self.arglist.append(Reals('e', 2.71828))
 		self.functions.append(Cosinus('cos(x)', 'cos(x)'))
 		self.functions.append(Sinus('sin(x)', 'sin(x)'))
+		self.functions.append(Exp('exp(x)', 'exp(x)'))
+		self.functions.append(Sqrt('sqrt(x)', 'sqrt(x)'))
 		self.evaluator = Evaluator(self.arglist, self.functions)
 		self.formater = Formater()
 		self.graph = Graph(self.arglist, self.functions)
@@ -51,8 +56,8 @@ class Interpreter:
 		x_arg = left_cmd.split('(')[1].split(')')[0]
 		for i in range(len(exp)) :
 			for arg in self.arglist :
-				if exp[i] == arg.name and exp[i] != x_arg :
-					exp[i] = str(arg)
+				if exp[i] == arg.name and exp[i] != x_arg and arg.name != 'i' :
+					exp[i] = repr(arg)
 		input = self.formater.format_expression(''.join(exp), self.functions)
 		# TODO check right cmd input
 		for i in range(len(self.functions)) :
@@ -88,11 +93,20 @@ class Interpreter:
 		else :
 			return Error(0)
 
+	def parse_equation(self, equation : str) :
+		pass
+	
 	def parse_eval(self, cmd : str) :
 		if cmd.split('=')[1].strip() != '?' :
-			pass
+			left = Member(self.parse_equation(cmd.split('=')[0]))
+			right = Member(self.parse_equation(cmd.split('=')[1].strip('?')))
 			# TODO : equations
-		exp = self.formater.format_expression(cmd.split('=')[0], self.functions).replace('-', '-1*')
+		exp = self.formater.format_expression(cmd.split('=')[0], self.functions)
+		if len(exp.split('=')[0].split()) == 1 and '{' in exp :
+			for i in self.functions :
+				if i.name == exp.split('=')[0].split('{')[0] :
+					if i.arg == exp.split('=')[0].split('{')[1].split('}')[0] :
+						return i.expression
 		return self.evaluator.ft_eval(exp)
 
 	def ft_parse_commands(self, cmd : str) :

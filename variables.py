@@ -1,7 +1,11 @@
 from __future__ import annotations
 from error import Error
 
-class Rationnals :
+class Polynome():
+	def __init__():
+		pass
+	
+class Reals :
 	def __init__(self, name : str, input : float) -> None :
 		self.real = input
 		self.name = name
@@ -12,7 +16,7 @@ class Rationnals :
 		real = self.real + other.real
 		if type(other) is Imaginaries :
 			return Imaginaries('sum', real, other.img)
-		return Rationnals('sum', real)
+		return Reals('sum', real)
 
 	def __radd__(self, other) :
 		if type(other) is Error or type(other) is Matrix:
@@ -20,7 +24,7 @@ class Rationnals :
 		real = self.real + other.real
 		if type(other) is Imaginaries :
 			return Imaginaries('sum', real, other.img)
-		return Rationnals('sum', real)
+		return Reals('sum', real)
 
 	def __sub__(self, other) :
 		if type(other) is Error :
@@ -28,7 +32,7 @@ class Rationnals :
 		real = self.real - other.real
 		if type(other) is Imaginaries :
 			return Imaginaries('sum', real, -other.img)
-		return Rationnals('sum', real)
+		return Reals('sum', real)
 	
 	def __rsub__(self, other) :
 		if type(other) is Error :
@@ -36,7 +40,7 @@ class Rationnals :
 		real = other.real - self.real
 		if type(other) is Imaginaries :
 			return Imaginaries('sum', real, other.img)
-		return Rationnals('sum', real)
+		return Reals('sum', real)
 	
 	def __rmul__(self, other) :
 		if type(other) is Matrix :
@@ -45,13 +49,13 @@ class Rationnals :
 			return Error(other.err_code)
 		real = 0
 		img = 0
-		if type(other) is Rationnals :
+		if type(other) is Reals :
 			real = self.real * other.real
 		if type(other) is Imaginaries :
 			real = self.real * other.real
 			img = other.img * self.real
 			return Imaginaries('rmul', real, img)
-		return Rationnals('rmul', real)
+		return Reals('rmul', real)
 	
 	def __mul__(self, other) :
 		if type(other) is Matrix :
@@ -59,24 +63,24 @@ class Rationnals :
 		if type(other) is Error :
 			return Error(other.err_code)
 		real, img = 0, 0
-		if type(other) is Rationnals :
+		if type(other) is Reals :
 			real = self.real * other.real
 		if type(other) is Imaginaries :
 			real = self.real * other.real
 			img = other.img * self.real
 			return Imaginaries('mul', real, img)
-		return Rationnals('mul', real)
+		return Reals('mul', real)
 
 	def __truediv__(self, other) :
 		if type(other) is Error :
 			return NotImplemented
 		if type(other) is (float or int) and other != 0 :
-			return Rationnals('', self.real/other)
+			return Reals('', self.real/other)
 		elif type(other) is (float or int) and other == 0 :
 			return Error(11) 
-		if type(other) is Rationnals and other.real != 0 :
-			return Rationnals('', self.real / other.real)
-		if type(other) is Rationnals and other.real == 0 :
+		if type(other) is Reals and other.real != 0 :
+			return Reals('', self.real / other.real)
+		if type(other) is Reals and other.real == 0 :
 			return Error(11)
 		if type(other) is Imaginaries :
 			return NotImplemented
@@ -86,24 +90,24 @@ class Rationnals :
 		if type(other) is Error :
 			return NotImplemented
 		if type(other) is (float or int) and other != 0 :
-			return Rationnals('',other/self.real)
+			return Reals('',other/self.real)
 		elif type(other) is (float or int) and other == 0 :
 			return Error(11)
-		if type(other) is Rationnals and self.real == 0 :
+		if type(other) is Reals and self.real == 0 :
 			return Error(11)
-		if type(other) is Rationnals and self.real != 0 :
-			return Rationnals('',other.real / self.real)
+		if type(other) is Reals and self.real != 0 :
+			return Reals('',other.real / self.real)
 		return self
 	
 	def __mod__(self, other) :
 		if type(other) is Error :
 			return NotImplemented
 		if type(other) is (float or int) and other != 0 :
-			return Rationnals('', self.real % other)
+			return Reals('', self.real % other)
 		elif type(other) is (float or int) and other == 0 :
 			return Error(11)
-		if type(other) is Rationnals :
-			return Rationnals('', self.real % other.real)
+		if type(other) is Reals :
+			return Reals('', self.real % other.real)
 		if type(other) is Imaginaries :
 			return NotImplemented
 	
@@ -111,9 +115,9 @@ class Rationnals :
 		if type(other) is (Error or Imaginaries) :
 			return NotImplemented
 		if type(other) is (int or float) :
-			return Rationnals('', pow(self.real, other))
-		if type(other) is Rationnals :
-			return Rationnals('', pow(self.real, other.real))
+			return Reals('', pow(self.real, other))
+		if type(other) is Reals :
+			return Reals('', pow(self.real, other.real))
 	
 	def __str__(self) :
 		return(f'{self.real}')
@@ -122,7 +126,7 @@ class Rationnals :
 		return(f'{self.real}')
 	
 	def copy(self) :
-		return Rationnals('', self.real)
+		return Reals('', self.real)
 
 
 class Imaginaries :
@@ -162,7 +166,7 @@ class Imaginaries :
 			return Imaginaries('', self.real / other, self.img / other)
 		elif type(other) is (float or int) and other == 0 :
 			return Error(11)
-		if type(other) is Rationnals :
+		if type(other) is Reals :
 			return Imaginaries('', self.real / other.real, self.img / other.real)
 		if type(other) is Imaginaries :
 			return Imaginaries('', (self.real * other.real + other.img * self.img) / (other.real**2 + other.img**2), \
@@ -177,7 +181,7 @@ class Imaginaries :
 				-other * self.img / (self.real**2 + self.img**2))
 		elif type(other) is (float or int) and other == 0 :
 			return Error(11)
-		if type(other) is Rationnals :
+		if type(other) is Reals :
 			return Imaginaries('', other.real * self.real / (self.real**2 + self.img**2), \
 				-other.real * self.img / (self.real**2 + self.img**2))
 		if type(other) is Imaginaries :
@@ -190,7 +194,7 @@ class Imaginaries :
 			return NotImplemented
 		real = 0
 		img = 0
-		if type(other) is Rationnals :
+		if type(other) is Reals :
 			real = self.real * other.real
 			img = self.img * other.real
 		if type(other) is Imaginaries :
@@ -204,7 +208,7 @@ class Imaginaries :
 			return NotImplemented
 		real = 0
 		img = 0
-		if type(other) is Rationnals :
+		if type(other) is Reals :
 			real = self.real * other.real
 			img = self.img * other.real
 		if type(other) is Imaginaries :
@@ -267,7 +271,7 @@ class Matrix :
 
 	def __mul__(self, other) :
 		mul_mat = []
-		if type(other) is Rationnals :
+		if type(other) is Reals :
 			real = other.real
 		if type(other) is (float or int) :
 			real = other
@@ -285,7 +289,7 @@ class Matrix :
 
 	def __rmul__(self, other) :
 		mul_mat = []
-		if type(other) is Rationnals :
+		if type(other) is Reals :
 			real = other.real
 		if type(other) is (float or int) :
 			real = other
@@ -305,7 +309,17 @@ class Matrix :
 		buff = ''
 		for i in self.mat :
 			buff += str(i) + '\n'
+		buff = buff[:-1]
 		return f'{buff}'
-	
+
+	def __repr__(self) :
+		buff = '['
+		for i in self.mat :
+			buff += str(i)
+			buff += ';'
+		buff = buff[:-1]
+		buff += ']'
+		return f'{buff}'
+
 	def copy(self) :
 		return Matrix('', self.input)

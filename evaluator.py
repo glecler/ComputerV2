@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-from types import FrameType
 from variables import *
 from formater import Formater
 from error import Error, SilentError
@@ -12,33 +11,57 @@ class Evaluator:
 		self.functions = functions
 		self.formater = Formater()
 	
+	def ft_eval_arg(self, exp : str) :
+		brackets = 0
+		buff = ''
+		rep_buff = []
+		i = 0
+		while i < len(exp) :
+			if exp[i] == '{' :
+				brackets += 1
+				i += 1
+				while brackets != 0 :
+					if exp[i] == '}' :
+						brackets -= 1
+					if exp[i] == '{' :
+						brackets += 1
+					if brackets != 0 :
+						buff += exp[i]
+					i += 1
+				rep_buff.append(buff)
+				buff = ''
+			else :
+				i += 1
+		for j in rep_buff :
+			if type(self.ft_eval(j)) == Error:
+				return exp
+			exp = exp.replace('{' + j + '}', '{' + repr(self.ft_eval(j)) + '}')
+		return exp
+			
+
+
 	# find, evaluates then replace function image in expression
 	def ft_eval_functions(self, exp : str) -> str :
-		sp = exp.split()
-		i = -1
-		while i < len(sp) - 1:
-			i += 1
-			if '(' in sp[i] and ')' in sp[i] : # 'f(x)'
-				func_name, func_arg = self.ft_trim_function(sp[i])
-				is_name = False
-				print('name : ', func_name)
-				for k in self.functions :
-					if func_name == k.name :
-						is_name = True
-						if func_arg == k.arg :
-							print(k.expression)
-							return 0 # g(x) = 3 * x
-						if func_name == 'cos' or func_name == 'sin' :
-							print('yuk')
-							func_arg = self.ft_eval(func_arg)
-						print('ok : ', k.image(func_arg))
-						if type(eval_func := self.ft_eval(k.image(func_arg))) == Error :
-							return eval_func
-						sp[i] = sp[i].replace(func_name + '(' + func_arg + ')', str(eval_func))
-						i = 0
-				if is_name is False and func_name != '' :
-					return Error(7)
-		return self.formater.format_expression(''.join(sp), self.functions)
+		func_name, func_arg = exp.split('{')[0].strip(), exp.split('{')[1].split('}')[0].strip()
+		is_name, is_var, is_alpha = False, False, True
+		for j in func_arg :
+			if 'a' >= j or  j >= 'z' :
+				is_alpha = False
+		for k in self.functions :
+			if func_name == k.name :
+				is_name = True
+				for i in self.arglist :
+					if i.name == func_arg :
+						is_var = True
+				if is_alpha == True and is_var == False :
+					return Error(9)
+				if func_name == 'cos' or func_name == 'sin' :
+					func_arg = self.ft_eval(func_arg)
+				if type(eval_func := self.ft_eval(k.image(str(func_arg)))) == Error :
+					return eval_func
+				return eval_func
+		if is_name is False and func_name != '' :
+			return Error(7)
 	
 	# find variable in the split on ^ for eval_powers
 	def ft_get_argument(self, exp : str) -> str :
@@ -67,11 +90,10 @@ class Evaluator:
 			while x < len(exp) and exp[x] >= 'a' and exp[x] <= 'z' :
 				x += 1
 			buff = exp[:x + 1].strip('*')
-			print(buff)
 		else :
 			while x < len(exp) and ((exp[x] >= 'a' and exp[x] <= 'z') \
 				or (exp[x] >= '0' and exp[x] <= '9') \
-					or (exp[x] =='(' or exp[x] == ')') or exp[x] == '.') :
+					or (exp[x] == '{' or exp[x] == '}') or exp[x] == '.' or exp[x] == '-') :
 				buff = buff + exp[x]
 				x = x + 1
 		return buff
@@ -96,26 +118,23 @@ class Evaluator:
 
 	# cuts exp on ^ and evals left and right arguments, then replace into expression
 	def ft_eval_powers(self, exp : str) :
-		print(exp)
 		left = self.ft_get_argument(exp.rsplit('^', 1)[0][::-1])[::-1] # rev rev
 		right = self.ft_get_argument(exp.rsplit('^', 1)[1])
 		buff_left = self.ft_even_bracket(left)
 		buff_right = self.ft_even_bracket(right)
-		print(buff_right, buff_left)
 		buff = str(self.ft_eval(buff_left)**self.ft_eval(buff_right))
-		print(buff)
 		return exp.replace(left + '^' + right, buff)
 
 	# evaluates any expression and returns a variable
 	def ft_eval(self, exp : str) :
+		exp = self.ft_eval_arg(exp)
 		while '^' in exp :														
 			exp = self.ft_eval_powers(exp)
-		print('a', exp)
-		if (exp := self.ft_eval_functions(exp)) != 0 :
-			if type(exp) is Error :
-				return exp
-		else :
-			return SilentError(0)
+		#if (exp := self.ft_eval_functions(exp)) != 0 :
+		#	if type(exp) is Error :
+		#		return exp
+		#else :
+		#	return SilentError(0)
 		if '(' not in exp :
 			return self.ft_eval_exp(exp)														
 		i = 0
@@ -139,7 +158,7 @@ class Evaluator:
 			return self.ft_eval_exp(self.split_on_last_sub(exp)[0]) - \
 				self.ft_eval_exp(self.split_on_last_sub(exp)[1])
 		if '*' in exp or '/' in exp or '%' in exp :
-			for i in exp :
+			for i in exp[::-1] :
 				if '/' == i :
 					return self.ft_eval_exp(exp.rsplit('/', 1)[0]) / \
 						self.ft_eval_exp(exp.rsplit('/', 1)[1])
@@ -149,11 +168,11 @@ class Evaluator:
 				if '*' == i :
 					return self.ft_eval_exp(exp.rsplit('*', 1)[0]) * \
 						self.ft_eval_exp(exp.rsplit('*', 1)[1])
-		for i in range(len(self.arglist)) :
-			if self.arglist[i].name in exp :
-				return self.arglist[i].copy()
 		if '{' in exp :
 			return self.ft_eval_functions(exp)
+		for i in range(len(self.arglist)) :
+			if self.arglist[i].name == exp.strip() :
+				return self.arglist[i].copy()
 		if '[' in exp :
 			if '[[' in exp :
 				return Matrix('', exp)
@@ -163,28 +182,11 @@ class Evaluator:
 		if True in [True for i in exp.strip() if 'z' >= i >= 'a'] :
 			return Error(9)
 		if exp == '' :
-			return Rationnals('', 0)
+			return Reals('', 0)
 		if self.isfloat(''.join(exp.split())) == False :
-			return Rationnals('', 0) #Error(16)
-		return Rationnals('', float(''.join(exp.split())))
+			return Reals('', 0) #Error(16)
+		return Reals('', float(''.join(exp.split())))
 	
-	@staticmethod
-	def ft_trim_function(exp : str) :
-		i = 0
-		while exp[i] == '(':
-			i += 1
-		if '(' in exp[i:] :
-			func_name = exp[i:].split('(', 1)[0]
-			j = 0
-			#print(func_name)
-			while func_name[j] <= 'a' or func_name[j] >= 'z' or func_name[j] == 'i' :
-				j += 1
-			#print('aaaa', func_name, func_name[:j])
-			func_name = func_name[j:]
-			func_arg = exp[i:].split('(', 1)[1].split(')', 1)[0] # TODO find matching brackets
-			return func_name, func_arg
-		return '', ''
-
 	@staticmethod
 	def split_on_last_sub(exp : str) -> tuple :
 		last_char = 'start'
@@ -194,9 +196,10 @@ class Evaluator:
 				split_index = i
 				last_char = '-'
 			if exp[i] == '*' or exp[i] == '/' or exp[i] == '%' \
-				or exp[i] == ',' or exp[i] == ';' or exp[i] == ']' or exp[i] == '[' :
+				or exp[i] == ',' or exp[i] == ';' or exp[i] == ']' or exp[i] == '[' \
+					or exp[i] == '{' :
 				last_char = '*/%'
-			if '9' >= exp[i] >= '0' or 'z' >= exp[i] >= 'a' : #check arguments
+			if '9' >= exp[i] >= '0' or 'z' >= exp[i] >= 'a' or exp[i] == '}' or exp[i] == ')' : #check arguments
 				last_char = 'numeric'
 		if split_index == 0 :
 			return 0

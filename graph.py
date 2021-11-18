@@ -10,12 +10,12 @@ class Graph:
 		#range = max - min
 		step = ((xmax - xmin) // 40)
 		popped = 0
-		img_list = [self.evaluator.ft_eval(fun.image(i)).real if type(self.evaluator.ft_eval(fun.image(i))) == Rationnals else 0 for i in range(xmin, xmax, step)]
+		img_list = [self.evaluator.ft_eval(fun.image(i)).real if type(self.evaluator.ft_eval(fun.image(i))) == Reals else 0 for i in range(xmin, xmax, step)]
 		print(img_list)
 		img_max = max(img_list)
 		minimum = min(img_list) - 1 
-		count = len(img_list)
-		mid = count // 2
+		amp = max(img_list) - min(img_list)
+		
 		while max(img_list) != min(img_list) :
 			print_buff = []
 			count -= 1

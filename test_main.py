@@ -20,7 +20,9 @@ def prompt():
 def main():
 	interpreter = Interpreter()
 	colors = Colors
-
+	print(colors.FAIL + '\n--------------------------\n' + colors.ENDC)
+	print(colors.FAIL + '\n----------TEST-------------\n' + colors.ENDC)
+	print(colors.FAIL + '\n----------MAIN------------\n' + colors.ENDC)
 	print(colors.OKBLUE + '\n--------------------------\n' + colors.ENDC)
 
 	print(colors.OKBLUE + 'Partie Assignation' + colors.ENDC)
@@ -81,7 +83,7 @@ def main():
 	print(colors.OKBLUE + '\n--------------------------\n' + colors.ENDC)
 	
 	print('> x = --2')
-	print(interpreter.parse('x = --2'), colors.OK if type(interpreter.parse('x = --2')) == Error else colors.KO)
+	print(interpreter.parse('x = --2'), colors.OK if str(interpreter.parse('x = --2')) == '2.0' else colors.KO)
 	print('\n')
 
 	print('> f(x) = x * 2')
@@ -177,8 +179,8 @@ def main():
 	print('> var')
 	print(interpreter.parse('var'))
 	print('\n')
+
 	print(colors.OKBLUE + '\n--------------------------\n' + colors.ENDC)
-	
 	print(colors.OKBLUE + '\nTest Valide Avancé\n' + colors.ENDC)
 	print(colors.OKBLUE + '\n--------------------------\n' + colors.ENDC)
 	
@@ -192,7 +194,7 @@ def main():
 	print('\n')
 	
 	print('> f(x) = ?')
-	print(interpreter.parse('f(x) = ?'), colors.OK if type(interpreter.parse('f(x) = ?')) == SilentError else colors.KO)
+	print(interpreter.parse('f(x) = ?'), colors.OK if str(interpreter.parse('f(x) = ?')) == 'x * 5' else colors.KO)
 	print('\n')
 
 	print('> x = 2')
@@ -203,13 +205,23 @@ def main():
 	print(interpreter.parse('y = x * [[4, 2]]'), colors.OK if str(interpreter.parse('y = x * [[4, 2]]')) == str(Matrix('','[[8, 4]]')) else colors.KO)
 	print('\n')
 
+	print('> var')
+	print(interpreter.parse('var'))
+	print('\n')
+	print('> fun')
+	print(interpreter.parse('fun'))
+	print('\n')
+	print('> history')
+	print(interpreter.parse('history'))
+	print('\n')
+
+
 	print('> f(z) = z * y ')
-	print(interpreter.parse('f(z) = z * y'), colors.OK if str(interpreter.parse('f(z) = z * y')) == 'z * [8.0,4.0]' else colors.KO)
+	print(interpreter.parse('f(z) = z * y'), colors.OK if str(interpreter.parse('f(z) = z * y')) == 'z * [[8.0,4.0]]' else colors.KO)
 	print('\n')
 	
 	print('> f(z) = ?')
-	exp = type(interpreter.parse('f(z) = ?'))
-	print(colors.OK if exp == SilentError else colors.KO)
+	print(exp := str(interpreter.parse('f(z) = ?')), colors.OK if exp == 'z * [[8.0,4.0]]' else colors.KO)
 	print('\n')
 
 	print(colors.OKBLUE + '\n--------------------------\n' + colors.ENDC)
@@ -304,11 +316,11 @@ def main():
 	print('\n')
 
 	print('> f(2)^g(1)= ?')
-	print(exp := str(interpreter.parse('f(2)^g(1)= ?')), colors.OK if exp == '8.6451895254412' else colors.KO)
+	print(exp := str(interpreter.parse('f(2)^g(1)= ?')), colors.OK if exp == '8.0' else colors.KO)
 	print('\n')
 
 	print('> (g(1)-f(1))/((34)^(2.1)) = ?')
-	print(exp := str(interpreter.parse('(g(1)-f(1))/((34)^(2.1)) = ? ')), colors.OK if exp == '-0.000585309547241132' else colors.KO)
+	print(exp := str(interpreter.parse('(g(1)-f(1))/((34)^(2.1)) = ? ')), colors.OK if exp == '-0.0006079869733164874' else colors.KO)
 	print('\n')
 
 	print('> a = [[3, 2, 3];[2, 4, 1];[4,5, 8]] * 3.4')
@@ -321,7 +333,7 @@ def main():
 
 		
 	print('> f(x) =  3x(3 -x )')
-	print(exp := str(interpreter.parse('f(x) = 3x(3 -x )')), colors.OK if exp == '3 * x * (3 - x)' else colors.KO)
+	print(exp := str(interpreter.parse('f(x) = 3x(3 -x )')), colors.OK if exp == '3 * x * (3 - 1 * x)' else colors.KO)
 	print('\n')
 		
 	print('> f(-3.4) = ?')
@@ -367,11 +379,36 @@ def main():
 	print(exp := str(interpreter.parse('(-f(-2)^2) = ? ')), colors.OK if exp == '-1.0' else colors.KO)
 	print('\n')
 
-	print('> (-f(-2))^2 =? ')
-	print(exp := str(interpreter.parse('(-f(-2))^2 = ? ')), colors.OK if exp == '1.0' else colors.KO)
+	print(colors.OKBLUE + '\n--------------------------\n' + colors.ENDC)
+	print(colors.OKBLUE + 'Test Matrices' + colors.ENDC)
+	print(colors.OKBLUE + '\n--------------------------\n' + colors.ENDC)
+	
+	print('> a = [[2, 1]] ')
+	print(exp := str(interpreter.parse('a = [[2, 1]] ')), colors.OK if exp == '[2.0, 1.0]' else colors.KO)
+	print('\n')
+	
+	print('> f(x) = a*x ')
+	print(exp := str(interpreter.parse('f(x) = a*x ')), colors.OK if exp == '[[2.0,1.0]] * x' else colors.KO)
+	print('\n')
+	
+	print('> f(2)=? ')
+	print(exp := str(interpreter.parse('f(2)=?')), colors.OK if exp == '[4.0, 2.0]' else colors.KO)
+	print('\n')
+
+	print('> b = [[2, 1, 2.3, 4.5, 33];[0, 0, 0, 0 ,0];[3, 3, 3, 3, 3]]')
+	print(exp := str(interpreter.parse('b =  [[2, 1, 2.3, 4.5, 33];[0, 0, 0, 0 ,0];[3, 3, 3, 3, 3]] ')), colors.OK if exp == '[2.0, 1.0, 2.3, 4.5, 33.0]\n[0.0, 0.0, 0.0, 0.0, 0.0]\n[3.0, 3.0, 3.0, 3.0, 3.0]' else colors.KO)
+	print('\n')
+	
+	print('> f(x) = b*x ')
+	print(exp := str(interpreter.parse('f(x) = b*x ')), colors.OK if exp == '[[2.0,1.0,2.3,4.5,33.0];[0.0,0.0,0.0,0.0,0.0];[3.0,3.0,3.0,3.0,3.0]] * x' else colors.KO)
+	print('\n')
+
+	print('> f(-23.002)=? ')
+	print(exp := str(interpreter.parse('f(-23.002)=?')), colors.OK if exp == '[-46.004, -23.002, -52.904599999999995, -103.509, -759.0659999999999]\n[-0.0, -0.0, -0.0, -0.0, -0.0]\n[-69.006, -69.006, -69.006, -69.006, -69.006]' else colors.KO)
 	print('\n')
 	interpreter = Interpreter()
 
+	
 	cmd =0
 	while cmd != 'quit':
 		cmd = prompt()
