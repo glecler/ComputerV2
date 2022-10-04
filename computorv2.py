@@ -8,7 +8,7 @@
 # Parser
 # Calculator
 
-from interpreter import *
+from interpreter import Interpreter
 
 def prompt() :
     cmd = input('> ')

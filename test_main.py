@@ -1,4 +1,5 @@
-from interpreter import *
+from interpreter import Interpreter
+from error import Error
 import sys
 
 class Colors:
@@ -117,19 +118,19 @@ def main():
     print('\n')
 
     print('> y = 4i')
-    print(interpreter.parse('y = 4i'), colors.OK if str(interpreter.parse('y = 4i')) == 'i * 4.0' else colors.KO)
+    print(interpreter.parse('y = 4i'), colors.OK if str(interpreter.parse('y = 4i')) == '4.0i' else colors.KO)
     print('\n')
 
     print('> y = ?')
-    print(interpreter.parse('y = ?'), colors.OK if str(interpreter.parse('y = ?')) == 'i * 4.0' else colors.KO)
+    print(interpreter.parse('y = ?'), colors.OK if str(interpreter.parse('y = ?')) == '4.0i' else colors.KO)
     print('\n')
 
     print('> z = [[2, 3];[3, 5]]')
-    print(interpreter.parse('z = [[2, 3];[3, 5]]'), colors.OK if str(interpreter.parse('z = [[2, 3];[3, 5]]')) == str(Matrix('', '[[2, 3];[3, 5]]')) else colors.KO)
+    print(interpreter.parse('z = [[2, 3];[3, 5]]'), colors.OK if str(interpreter.parse('z = [[2, 3];[3, 5]]')) == '[2.0, 3.0]\n[3.0, 5.0]' else colors.KO)
     print('\n')
 
     print('> z = ?')
-    print(interpreter.parse('z = ?'), colors.OK if str(interpreter.parse('z = ?')) == str(Matrix('', '[[2, 3];[3, 5]]')) else colors.KO)
+    print(interpreter.parse('z = ?'), colors.OK if str(interpreter.parse('z = ?')) == '[2.0, 3.0]\n[3.0, 5.0]' else colors.KO)
     print('\n')
     
     print('> var')
@@ -166,15 +167,15 @@ def main():
     print('\n')
 
     print('> A = [[2, 3]]')
-    print(interpreter.parse('A = [[2, 3]]'), colors.OK if str(interpreter.parse('A = [[2, 3]]')) == str(Matrix('','[[2, 3]]')) else colors.KO)
+    print(interpreter.parse('A = [[2, 3]]'), colors.OK if str(interpreter.parse('A = [[2, 3]]')) == '[2.0, 3.0]' else colors.KO)
     print('\n')
 
     print('> B = A')
-    print(interpreter.parse('B = A'), colors.OK if str(interpreter.parse('B = A')) == str(Matrix('','[[2, 3]]')) else colors.KO)
+    print(interpreter.parse('B = A'), colors.OK if str(interpreter.parse('B = A')) == '[2.0, 3.0]' else colors.KO)
     print('\n')
 
     print('> B = ?')
-    print(interpreter.parse('B = ?'), colors.OK if str(interpreter.parse('B = ?')) == str(Matrix('','[[2, 3]]')) else colors.KO)
+    print(interpreter.parse('B = ?'), colors.OK if str(interpreter.parse('B = ?')) == '[2.0, 3.0]' else colors.KO)
     print('\n')
 
     print('> var')
@@ -203,7 +204,7 @@ def main():
     print('\n')
     
     print('> y = x * [[4, 2]]')
-    print(interpreter.parse('y = x * [[4, 2]]'), colors.OK if str(interpreter.parse('y = x * [[4, 2]]')) == str(Matrix('','[[8, 4]]')) else colors.KO)
+    print(interpreter.parse('y = x * [[4, 2]]'), colors.OK if str(interpreter.parse('y = x * [[4, 2]]')) == '[8.0, 4.0]' else colors.KO)
     print('\n')
 
     print('> var')
@@ -259,8 +260,12 @@ def main():
     print(colors.OKBLUE + '\nTest Valide Semi Avancé\n' + colors.ENDC)
     print(colors.OKBLUE + '\n--------------------------\n' + colors.ENDC)
 
+    print('> x = 2 * i')
+    print(interpreter.parse('x = 2 * i'), colors.OK if str(interpreter.parse('x = 2 * i')) == '2.0i' else colors.KO)
+    print('\n')
+
     print('> x^2 = ?')
-    print(interpreter.parse('x^2 = ?'), colors.OK if str(interpreter.parse('x^2 = ?')) == '4.0' else colors.KO)
+    print(interpreter.parse('x^2 = ?'), colors.OK if str(interpreter.parse('x^2 = ?')) == '-4.0' else colors.KO)
     print('\n')
 
     print('> f(x) = x + 2')
@@ -274,6 +279,18 @@ def main():
     print('> f(p) = ?')
     print(exp := str(interpreter.parse('f(p) = ?')), colors.OK if exp == '6.0' else colors.KO)
     print('\n')
+
+    print('> A = [[2, 3];[3, 4]]')
+    print(exp := str(interpreter.parse('A = [[2, 3];[3, 4]]')), colors.OK if exp == '[2.0, 3.0]\n[3.0, 4.0]'  else colors.KO)
+    print('\n')
+    
+    print('> B = [[1, 0];[0, 1]]')
+    print(exp := str(interpreter.parse('B = [[1, 0];[0, 1]]')), colors.OK if exp == '[1.0, 0.0]\n[0.0, 1.0]' else colors.KO)
+    print('\n')
+
+   # print('> A * B = ?')
+   # print(exp := str(interpreter.parse('A * B = ?')), colors.OK if exp == '' else colors.KO)
+   # print('\n')
 
     print('Matrix ** to be tested later')
     print(colors.OKBLUE + '\n--------------------------\n' + colors.ENDC)
@@ -301,7 +318,7 @@ def main():
     print('\n')
 
     print('> f(2) = ?')
-    print(exp := str(interpreter.parse('f(2) = ?')), colors.OK if exp == 'i * 4.0' else colors.KO)
+    print(exp := str(interpreter.parse('f(2) = ?')), colors.OK if exp == '4.0i' else colors.KO)
     print('\n')
 
     print(colors.OKBLUE + '\n--------------------------\n' + colors.ENDC)
@@ -325,11 +342,11 @@ def main():
     print('\n')
 
     print('> a = [[3, 2, 3];[2, 4, 1];[4,5, 8]] * 3.4')
-    print(exp := str(interpreter.parse('a = [[3, 2, 3];[2, 4, 1];[4,5, 8]] * 3.4')), colors.OK if exp == str(Matrix('', '[[10.2, 6.8, 10.2];[6.8, 13.6, 3.4];[13.6, 17.0, 27.2]]')) else colors.KO)
+    print(exp := str(interpreter.parse('a = [[3, 2, 3];[2, 4, 1];[4,5, 8]] * 3.4')), colors.OK if exp == '[10.2, 6.8, 10.2]\n[6.8, 13.6, 3.4]\n[13.6, 17.0, 27.2]' else colors.KO)
     print('\n')
     
     print('> a = ?')
-    print(exp := str(interpreter.parse('a = ?')), colors.OK if exp == str(Matrix('', '[[10.2, 6.8, 10.2];[6.8, 13.6, 3.4];[13.6, 17.0, 27.2]]')) else colors.KO)
+    print(exp := str(interpreter.parse('a = ?')), colors.OK if exp == '[10.2, 6.8, 10.2]\n[6.8, 13.6, 3.4]\n[13.6, 17.0, 27.2]' else colors.KO)
     print('\n')
 
         
@@ -343,7 +360,7 @@ def main():
 
     
     print('> (3 + 3.5i) / (.7 - 2i) = ?')
-    print(exp := str(interpreter.parse('(3 + 3.5i) / (.7 - 2i) = ? ')), colors.OK if exp == '-1.0913140311804008 + i * 1.88195991091314' else colors.KO)
+    print(exp := str(interpreter.parse('(3 + 3.5i) / (.7 - 2i) = ? ')), colors.OK if exp == '-1.0913140311804008 + 1.88195991091314i' else colors.KO)
     print('\n')
 
     print(colors.OKBLUE + '\n--------------------------\n' + colors.ENDC)
@@ -419,7 +436,10 @@ def main():
     print('> a + b + a = ?')
     print(exp := str(interpreter.parse('a + b + a = ?')), colors.OK if exp == '[-1.4, 5.0]\n[-2.0, 6.8999999999999995]' else colors.KO)
     print('\n')
-    
+ 
+    print('> a * b = ?')
+    print(exp := str(interpreter.parse('a ** b = ?')), colors.OK if exp == '[-1.4, 5.0]\n[-2.0, 6.8999999999999995]' else colors.KO)
+    print('\n')   
 
     
     cmd =0

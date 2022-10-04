@@ -6,8 +6,8 @@ class Function :
     def __init__(self, name, input) :
         self.name = name.split('(', 1)[0]
         self.arg = name.split('(')[1].split(')')[0]
-        self.expression = input
-        
+        self.expression = input # here should 
+    
     def image(self, x : str) -> str :
         buff = ''
         i = 0
@@ -23,10 +23,13 @@ class Function :
         return exp_buff
         
     def __str__(self) :
+        # maybe simplify expressions here
         return f'{self.expression}'
 
 class Cosinus(Function) :
     def image(self, x: str) -> str:
+        if type(x) != str :
+            return
         return str(mt.cos(float(x)))
 
 class Sinus(Function) :

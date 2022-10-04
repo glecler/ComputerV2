@@ -1,17 +1,155 @@
 from __future__ import annotations
 from error import Error
 
-class Polynome():
-    def __init__():
-        pass
+
+class Variable :
+    pass
+# function should inherit variable, and polynome should inherit function
+
+class Polynome :
+    
+    def __init__(self, variables) : # variables are any variable
+        self.variables = variables
+        self.varBuff = []
+        if True in [True if type(i) == Polynome else False for i in self.variables ] :
+            self.reduce_polynome()
+        print("ceci nest pas un test")
+        print(self.variables)
+        #TODO sort coeffs
+    
+    # variables constructing Polynome can themselves be of type Polynome
+    # this simple algorithm reduces the variables to Unknown by distibuting additively the Polynomes in variables
+    # note : if this is done every time a polynome is instancianted, there should not be nested Polynomes in the variables
+
+    def reduce_polynome(self) :
+        varBuff = []
+        retBuff = []
+
+
+        for var in self.variables :
+            if type(var) is not Polynome :
+                varBuff.append(var)
+            else :
+                for subVar in var :
+                    varBuff.append(subVar)
+        seenDegrees = []
+        print(varBuff)
+        for i in varBuff :
+            if type(i) == int:
+                return
+            print("varbuff : ", i, type(i))
+        print("wtf")
+        for var in varBuff :
+            if var.degree not in seenDegrees :
+                retBuff.append(sum([retVar for retVar in varBuff if var.degree == retVar.degree]))
+                seenDegrees.append(var.degree)
+        print("retbuff : ", retBuff)
+        self.variables = retBuff
+
+    # x^2 + 2*x - 2 * x^2 + 3*x
+    # x + 2 * x
+    # we consider that self and other are properly reduced
+    def __add__(self, other):
+        varBuff = []
+        if type(other) is Polynome :
+            for i in self.variables :
+                for j in other.variables :
+                    if i.degree == j.degree :
+                        varBuff.append(i + j)
+                        return Polynome(varBuff)
+        done = False
+        for i in self.variables :
+            j = i
+            print(i, other)
+            if other.degree == i.degree :
+                print(i, other)
+                j = i + other
+                done = True
+                print("j", j)
+            varBuff.append(j)
+        if done == False :
+            varBuff.append(other)
+        print("varbuff: ", varBuff)
+        return Polynome(varBuff)
+    
+    def __radd__(self, other):
+        self.__add__(other)
+
+    def __mul__(self, other):
+        if type(other) == Reals:
+            return Polynome([i * other for i in self.variables])
+
+    def __rmul__(self, other):
+        if type(other) == Reals:
+            print(other,[i for i in self.variables], [i * other for i in self.variables])
+            return Polynome([i * other for i in self.variables])
+
+    def __repr__(self) :
+        # {{a, b, c}} 
+        buff = ''
+        for i in self.variables :
+            buff += repr(i) + ';'
+        buff = buff[:-1]
+        return '{{' + f'{buff}' + '}}'
+    
+    def __str__(self) :
+        print("hello?")
+        varBuff = ''
+        count = 0
+        for i in self.variables :
+            varBuff += (' + ' if i.coefficient >= 0 and count > 0 else ' - ' if count > 0 else '') + str(i)
+            count += 1
+        return varBuff
+
+class Unknown :
+    def __init__(self, name, coefficient, degree) -> None :      # coefficient are any variable except Unknown, degree are Reals
+        self.name = name
+        self.coefficient = coefficient
+        self.degree = degree
+
+    def __add__(self, other) : # 3 * a + a
+        if type(other) is Unknown :
+            if other.name == self.name and other.degree == self.degree :
+                return Unknown(self.name, self.coefficient + other.coefficient, self.degree)  # error management if coeff type operation not possible?
+        return Polynome([other, self])
+
+    def __radd__(self, other) : # 3 * a + a
+        if type(other) is Unknown :
+            if other.name == self.name and other.degree == self.degree :
+                return Unknown(self.name, self.coefficient + other.coefficient, self.degree)  # error management if coeff type operation not possible?
+
+        return Polynome([other, self])
+
+    def __sub__(self, other) : #
+        if type(other) is Unknown :
+            if other.name == self.name and other.degree == self.degree :
+                return Unknown(self.name, self.coefficient - other.coefficient, self.degree)
+    def __mul__(self, other):
+        if type(other) is Reals:
+            return Unknown(self.name, self.coefficient * other.real, self.degree)
+
+    def __rmul__(self, other):
+        if type(other) is Reals:
+            return Unknown(self.name, self.coefficient * other.real, self.degree)
+    
+    def __repr__(self):
+        return f'<{self.name},{self.coefficient},{self.degree}>'
+
+    def __str__(self):
+        print("hello????")
+        return (f'{self.coefficient} * ' if self.coefficient > 1 else '') + f'{self.name}' + (f'^{self.degree}' if self.degree > 1 else '')
     
 class Reals :
     def __init__(self, name : str, input : float) -> None :
         self.real = input
         self.name = name
+        self.degree = 0
+        self.coefficient = self.real
 
     def __add__(self, other) :
-        if type(other) is Error or type(other) is Matrix :
+        if type(other) is int:
+            return Reals('', self.real + other)
+        if type(other) is Error or type(other) is Matrix or type(other) is Unknown :
             return NotImplemented
         real = self.real + other.real
         if type(other) is Imaginaries :
@@ -19,7 +157,9 @@ class Reals :
         return Reals('sum', real)
 
     def __radd__(self, other) :
-        if type(other) is Error or type(other) is Matrix:
+        if type(other) is int:
+            return Reals('', self.real + other)
+        if type(other) is Error or type(other) is  Matrix or type(other) is  Unknown:
             return NotImplemented
         real = self.real + other.real
         if type(other) is Imaginaries :
@@ -58,6 +198,7 @@ class Reals :
         return Reals('rmul', real)
     
     def __mul__(self, other) :
+        print("ooo", other)
         if type(other) is Matrix :
             return NotImplemented
         if type(other) is Error :
@@ -208,7 +349,10 @@ class Imaginaries :
             return NotImplemented
         real = 0
         img = 0
-        if type(other) is Reals :
+        if type(other) is int:
+            real = self.real * other
+            img = self.img * other
+        if type(other) is Reals:
             real = self.real * other.real
             img = self.img * other.real
         if type(other) is Imaginaries :
@@ -218,6 +362,15 @@ class Imaginaries :
         return Imaginaries('rmul', real, img)
     
     def __pow__(self, other) :
+        if type(other) is int or Reals:
+            if type(other) is Reals :
+                other = other.real
+            if other == 0 :
+                return 1
+            ret = 1
+            for i in range(int(other)) :
+                ret = self * ret
+            return ret
         return NotImplemented
 
     def __mod__(self, other) :
@@ -230,9 +383,9 @@ class Imaginaries :
         return f'[{self.real} , {self.img}]'
 
     def __str__(self) :
-        img_part = f'i * {self.img}' if self.img != 1 else f'i'
-        real_part = f'{self.real} + ' if self.real != 0 else ''
-        return real_part + img_part
+        img_part = f'{self.img}i' if self.img != 1 else f'i'
+        real_part = f'{self.real}' if self.real != 0 else ''
+        return real_part + ('+' if  (self.img > 0 and real_part != '') else '-' if self.img < 0 else '') + (img_part if  self.img != 0 else '')
     
     def copy(self) :
         return Imaginaries('', self.real, self.img)
@@ -240,30 +393,24 @@ class Imaginaries :
 
 class Matrix :
 
-    def __init__(self, name, input) -> None:
-        self.mat = list()
+    def __init__(self, name, mat) -> None:
+        self.mat = mat
         self.name = name
-        self.input = input
-        rows = input.split(';')
-        for i in range(len(rows)) :
-            rows[i] = rows[i].strip().strip(']').strip('[').split(',')
-            for j in range(len(rows[i])) :
-                rows[i][j] = float(rows[i][j])
-            self.mat.append(rows[i])
         self.check_rows()
-        self.row_len = len(self.mat[0])
-        self.col_len = len(self.mat)
+        self.row_len = len(self.mat)
+        self.col_len = len(self.mat[0])
 
     def __add__(self, other) :
         if type(other) is not Matrix :
             return NotImplemented
         if self.row_len != other.row_len or self.col_len != other.col_len :
             return Error(22)
-        add_mat = self.copy()
+        add_mat = [] # self.copy()
         for i in range(len(self.mat)) :
+            add_mat.append([])
             for j in range(len(self.mat[i])) :
-                add_mat.mat[i][j] = self.mat[i][j] + other.mat[i][j]
-        return add_mat
+                add_mat[i].append(self.mat[i][j] + other.mat[i][j])
+        return Matrix('', add_mat)
     
     def __radd__(self, other) :
         if type(other) is Matrix :
@@ -271,57 +418,56 @@ class Matrix :
         return NotImplemented
 
     def __sub__(self, other) :
-        if type(other) is Matrix : 
-            return self + (other * -1)
-        return NotImplemented
-    
+        if type(other) is not Matrix :
+            return NotImplemented
+        if self.row_len != other.row_len or self.col_len != other.col_len :
+            return Error(22)
+        sub_mat = self.copy()
+        for i in range(len(self.mat)) :
+            for j in range(len(self.mat[i])) :
+                sub_mat.mat[i][j] = self.mat[i][j] - other.mat[i][j]
+        return sub_mat
+
     def __rsub__(self, other) :
         return Error(13)
     
     def __pow__(self, other) :
-        return Error(13)
+        if type(other) is not Matrix :
+            return NotImplemented
+        mul_mat = []
+        for i in range(other.row_len) :
+            mul_mat.append([])
+            for j in range(self.col_len) :
+                mul_mat[i].append(sum([x * y[i] for x in self.mat[j] for y  in other.mat]))
+        return Matrix('', mul_mat)
+        
     
     def __rpow__(self, other) :
         return Error(13)
 
     def __mul__(self, other) :
-        mul_mat = []
+        if type(other) is Matrix :
+            return NotImplemented
+        mul_mat = self.copy()
         if type(other) is Reals :
             real = other.real
         if type(other) is (float or int) :
             real = other
-        buff = '['
-        for i in self.mat :
-            buff += '['
-            for j in i :
-                j *= real
-                buff += str(j) + ','
-            buff = buff[:-1]
-            buff += '];'
-        buff = buff[:-1]
-        buff += ']'
-        return Matrix('', buff) 
+        for i in range(len(self.mat)) :
+            for j in range(len(self.mat[i])) :
+                mul_mat.mat[i][j] *= real
+        return Matrix('', mul_mat.mat) 
 
     def __rmul__(self, other) :
-        mul_mat = []
-        print(type(other))
-        print(other)
+        mul_mat = self.copy()
         if type(other) is Reals :
             real = other.real
         if type(other) is (float or int) :
-            print(other)
             real = other
-        buff = '['
-        for i in self.mat :
-            buff += '['
-            for j in i:
-                j *= real
-                buff += str(j) + ','
-            buff = buff[:-1]
-            buff += '];'
-        buff = buff[:-1]
-        buff += ']'
-        return(Matrix('', buff)) 
+        for i in range(len(self.mat)) :
+            for j in range(len(self.mat[i])) :
+                mul_mat.mat[i][j] *= real
+        return(Matrix('', mul_mat.mat)) 
 
     def __str__(self) :
         buff = ''
@@ -340,7 +486,7 @@ class Matrix :
         return f'{buff}'
 
     def copy(self) :
-        return Matrix('', self.input)
+        return Matrix('', self.mat)
 
     def check_rows(self) :
         row_len = len(self.mat[0])

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from variables import *
+from variables import Reals, Imaginaries, Matrix, Unknown, Polynome
 from formater import Formater
 from error import Error, SilentError
 
@@ -42,6 +42,8 @@ class Evaluator:
 
     # find, evaluates then replace function image in expression
     def ft_eval_functions(self, exp : str) -> str :
+        if '{' not in exp :
+            return Error(0)
         func_name, func_arg = exp.split('{')[0].strip(), exp.split('{')[1].split('}')[0].strip()
         is_name, is_var, is_alpha = False, False, True
         for j in func_arg :
@@ -49,14 +51,17 @@ class Evaluator:
                 is_alpha = False
         for k in self.functions :
             if func_name == k.name :
+                print(self.functions, self.arglist)
                 is_name = True
                 for i in self.arglist :
                     if i.name == func_arg :
-                        is_var = True
+                        is_var = True                          ##### is var => is it a known var 
                 if is_alpha == True and is_var == False :
-                    return Error(9)
+                    return str(k)
                 if func_name == 'cos' or func_name == 'sin' :
                     func_arg = self.ft_eval(func_arg)
+                if is_alpha and is_var :
+                    return str(k)
                 if type(eval_func := self.ft_eval(k.image(str(func_arg)))) == Error :
                     return eval_func
                 return eval_func
@@ -130,11 +135,6 @@ class Evaluator:
         exp = self.ft_eval_arg(exp)
         while '^' in exp :                                                      
             exp = self.ft_eval_powers(exp)
-        #if (exp := self.ft_eval_functions(exp)) != 0 :
-        #   if type(exp) is Error :
-        #       return exp
-        #else :
-        #   return SilentError(0)
         if '(' not in exp :
             return self.ft_eval_exp(exp)                                                        
         i = 0
@@ -151,44 +151,70 @@ class Evaluator:
     # recursive parser, works on expression without brackets
     # splits the expression until only variables remain then return the variable, performing the calculation recursively
     def ft_eval_exp(self, exp : str) :
-        if __debug__ :
-            print(exp)
+        print("exp : ", exp)
         if '+' in exp :
+            print("exp ??")
             return self.ft_eval_exp(exp.split('+', 1)[1]) + \
                 self.ft_eval_exp(exp.split('+', 1)[0])
         if self.split_on_last_sub(exp) :
             return self.ft_eval_exp(self.split_on_last_sub(exp)[0]) - \
                 self.ft_eval_exp(self.split_on_last_sub(exp)[1])
-        if '*' in exp or '/' in exp or '%' in exp :
-            for i in exp[::-1] :
-                if '/' == i :
+        if '**' in exp or '*' in exp or '/' in exp or '%' in exp :
+            for i in reversed(range(len(exp))) :
+                if '/' == exp[i] :
                     return self.ft_eval_exp(exp.rsplit('/', 1)[0]) / \
                         self.ft_eval_exp(exp.rsplit('/', 1)[1])
-                if '%' == i :
+                if '%' == exp[i] :
                     return self.ft_eval_exp(exp.rsplit('%', 1)[0]) % \
                         self.ft_eval_exp(exp.rsplit('%', 1)[1])
-                if '*' == i :
+                if '*' == exp[i] :
+                    if exp[i - 1] == '*' :
+                        return self.ft_eval_exp(exp.rsplit('**', 1)[0]) ** \
+                            self.ft_eval_exp(exp.rsplit('**', 1)[1])
                     return self.ft_eval_exp(exp.rsplit('*', 1)[0]) * \
                         self.ft_eval_exp(exp.rsplit('*', 1)[1])
         if '{' in exp :
+            if '{{' in exp :
+                print(exp)
+                print('something wrong here ', exp.strip().strip('{{').strip('}}').split(';'))
+                varBuff = []
+                strBuff = exp.strip().strip('{{').strip('}}').split(';')
+                for i in strBuff :
+                    varBuff.append(self.ft_eval_exp(i))
+                print('aaa', [type(i) for i in varBuff])
+                return Polynome(varBuff)
             return self.ft_eval_functions(exp)
+        if '<' in exp:
+            return Unknown(exp.split(',')[1].strip('<'), int(exp.split(',')[1]), int(exp.split(',')[2].strip('>')))
         for i in range(len(self.arglist)) :
             if self.arglist[i].name == exp.strip() :
                 return self.arglist[i].copy()
-        if '[' in exp :
+        if '[' in exp and '{' not in exp :
             if '[[' in exp :
-                return Matrix('', exp)
+                return Matrix('', self.eval_mat(exp))
             else :
                 return Imaginaries('', float(exp.split(',')[0].strip().strip('[')), \
                     float(exp.split(',')[1].strip().strip(']')))
+        # polynome
         if True in [True for i in exp.strip() if 'z' >= i >= 'a'] :
-            return Error(9)
+            return Unknown(exp.strip(), 1, 1)
         if exp == '' :
             return Reals('', 0)
         if self.isfloat(''.join(exp.split())) == False :
             return Reals('', 0) #Error(16)
         return Reals('', float(''.join(exp.split())))
     
+    @staticmethod 
+    def eval_mat(exp : str) -> list :
+        mat = list()
+        rows = exp.split(';')
+        for i in range(len(rows)) :
+            rows[i] = rows[i].strip().strip(']').strip('[').split(',')
+            for j in range(len(rows[i])) :
+                rows[i][j] = float(rows[i][j])
+            mat.append(rows[i])
+        return mat
+
     @staticmethod
     def split_on_last_sub(exp : str) -> tuple :
         last_char = 'start'
