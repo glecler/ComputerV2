@@ -440,8 +440,22 @@ def main():
     print('> a * b = ?')
     print(exp := str(interpreter.parse('a ** b = ?')), colors.OK if exp == '[-1.4, 5.0]\n[-2.0, 6.8999999999999995]' else colors.KO)
     print('\n')   
-
     
+    print(colors.OKBLUE + '\n--------------------------\n' + colors.ENDC)
+    print(colors.OKBLUE + 'Test Inconnues' + colors.ENDC)
+    print(colors.OKBLUE + '\n--------------------------\n' + colors.ENDC)
+    
+    print('> x * x = ?')
+    print(exp := str(interpreter.parse('x*x=?')), colors.OK if exp == 'x^2' else colors.KO)
+    print('\n')
+    
+    print('> x(2 + x)')
+    print(exp := str(interpreter.parse('x(x+2)=?')), colors.OK if exp == '2.0 * x + x^2' else colors.KO)
+    print('\n')
+
+
+
+
     cmd =0
     while cmd != 'quit':
         cmd = prompt()

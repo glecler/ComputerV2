@@ -63,6 +63,8 @@ class Interpreter:
             for arg in self.arglist :
                 if exp[i] == arg.name and exp[i] != x_arg and arg.name != 'i' :
                     exp[i] = repr(arg)
+        print("fils de pute", ''.join(exp))
+        print("weird ", self.evaluator.ft_eval_exp(''.join(exp)))
         input = self.formater.format_expression(str(self.evaluator.ft_eval_exp(''.join(exp))), self.functions)
 
         # TODO check right cmd input
@@ -99,32 +101,22 @@ class Interpreter:
         else :
             return Error(0)
 
-    def develop_functions(self, input) :
-        print(input)
-
-        #for i in input :
-        #    for k in self.functions :
-                
-
-    def parse_polynome(self, input) :                   ## a * x^0 + b * x^1 + c * x^2 #####
                                                         ## find var
                                                         ## poly detect?
+    def parse_polynome(self, input) :                   ## a * x^0 + b * x^1 + c * x^2 #####
         input = self.develop_functions(input)
         input = input.replace('-', '+-').split('+')
         for i in range(len(input)) :
-            print(input[i])
             if type(self.evaluator.ft_eval(input[i].strip(' '))) is not Error :
                 input[i] = str(self.evaluator.ft_eval(input[i].strip(' ')))
             else :
                 input[i] = input[i].strip(' ')
         test_input = []
-        print("what is input : ", input)
         factors, powers = [], []
         if len(input) == 0:
             print('Error : Empty input.')
             return 0, 0
         for i in input:
-            print('member : ', i)
             if self.is_num(i):
                 factors.append((i))
                 powers.append(('0'))
@@ -141,8 +133,6 @@ class Interpreter:
                     else :
                         factors.append('1')
                     powers.append('1')
-        print("factors : ", factors)
-        print("powers : ", powers)
         if len(factors) != len(powers):
             print('Error : Invalid input.')
             return 0, 0
@@ -152,10 +142,9 @@ class Interpreter:
 
     def parse_eval(self, cmd : str) :
         if cmd.split('=')[1].strip() != '?' :
-           #auto fill 0 
+            #auto fill 0 
             left_poly = self.parse_polynome(self.formater.format_expression(cmd.split('=')[0]))
             right_poly = self.parse_polynome(cmd.split('=')[1].strip('?'))
-            print("heyo ", left_poly, right_poly)
             left_member = Member(left_poly[0], left_poly[1])
             right_member = Member(right_poly[0], right_poly[1])
             solver = Solver(left_member, right_member)
@@ -244,7 +233,7 @@ class Interpreter:
             if not('0' <= i <= '9') :
                 is_num = False
         return is_num
-    
+
     @staticmethod
     def is_num(string):
         if string == '' :

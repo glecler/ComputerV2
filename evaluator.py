@@ -12,6 +12,8 @@ class Evaluator:
         self.formater = Formater()
     
     def ft_eval_arg(self, exp : str) :
+        if '{{' in exp :
+            return exp
         brackets = 0
         buff = ''
         rep_buff = []
@@ -51,7 +53,6 @@ class Evaluator:
                 is_alpha = False
         for k in self.functions :
             if func_name == k.name :
-                print(self.functions, self.arglist)
                 is_name = True
                 for i in self.arglist :
                     if i.name == func_arg :
@@ -153,7 +154,6 @@ class Evaluator:
     def ft_eval_exp(self, exp : str) :
         print("exp : ", exp)
         if '+' in exp :
-            print("exp ??")
             return self.ft_eval_exp(exp.split('+', 1)[1]) + \
                 self.ft_eval_exp(exp.split('+', 1)[0])
         if self.split_on_last_sub(exp) :
@@ -175,17 +175,15 @@ class Evaluator:
                         self.ft_eval_exp(exp.rsplit('*', 1)[1])
         if '{' in exp :
             if '{{' in exp :
-                print(exp)
-                print('something wrong here ', exp.strip().strip('{{').strip('}}').split(';'))
                 varBuff = []
                 strBuff = exp.strip().strip('{{').strip('}}').split(';')
                 for i in strBuff :
                     varBuff.append(self.ft_eval_exp(i))
-                print('aaa', [type(i) for i in varBuff])
+                    print("varbuff = ", varBuff)
                 return Polynome(varBuff)
             return self.ft_eval_functions(exp)
         if '<' in exp:
-            return Unknown(exp.split(',')[1].strip('<'), int(exp.split(',')[1]), int(exp.split(',')[2].strip('>')))
+            return Unknown(exp.split(',')[0].strip('<'), int(float(exp.split(',')[1])), int(float(exp.split(',')[2].strip('>'))))
         for i in range(len(self.arglist)) :
             if self.arglist[i].name == exp.strip() :
                 return self.arglist[i].copy()
@@ -198,14 +196,15 @@ class Evaluator:
         # polynome
         if True in [True for i in exp.strip() if 'z' >= i >= 'a'] :
             return Unknown(exp.strip(), 1, 1)
-        if exp == '' :
-            return Reals('', 0)
+        if exp.strip() == '' :
+            return Error(0)
         if self.isfloat(''.join(exp.split())) == False :
             return Reals('', 0) #Error(16)
         return Reals('', float(''.join(exp.split())))
     
     @staticmethod 
     def eval_mat(exp : str) -> list :
+        print("shfezodsjvosqjv", exp)
         mat = list()
         rows = exp.split(';')
         for i in range(len(rows)) :
@@ -213,6 +212,7 @@ class Evaluator:
             for j in range(len(rows[i])) :
                 rows[i][j] = float(rows[i][j])
             mat.append(rows[i])
+        print('sseese', mat)
         return mat
 
     @staticmethod

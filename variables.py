@@ -11,14 +11,13 @@ class Polynome :
     def __init__(self, variables) : # variables are any variable
         self.variables = variables
         self.varBuff = []
+        print("varibales should be set", self.variables)
         if True in [True if type(i) == Polynome else False for i in self.variables ] :
             self.reduce_polynome()
-        print("ceci nest pas un test")
-        print(self.variables)
         #TODO sort coeffs
     
     # variables constructing Polynome can themselves be of type Polynome
-    # this simple algorithm reduces the variables to Unknown by distibuting additively the Polynomes in variables
+    # this simple function reduces the variables to Unknown by distibuting additively the Polynomes in variables
     # note : if this is done every time a polynome is instancianted, there should not be nested Polynomes in the variables
 
     def reduce_polynome(self) :
@@ -33,17 +32,13 @@ class Polynome :
                 for subVar in var :
                     varBuff.append(subVar)
         seenDegrees = []
-        print(varBuff)
         for i in varBuff :
             if type(i) == int:
                 return
-            print("varbuff : ", i, type(i))
-        print("wtf")
         for var in varBuff :
             if var.degree not in seenDegrees :
                 retBuff.append(sum([retVar for retVar in varBuff if var.degree == retVar.degree]))
                 seenDegrees.append(var.degree)
-        print("retbuff : ", retBuff)
         self.variables = retBuff
 
     # x^2 + 2*x - 2 * x^2 + 3*x
@@ -56,32 +51,29 @@ class Polynome :
                 for j in other.variables :
                     if i.degree == j.degree :
                         varBuff.append(i + j)
-                        return Polynome(varBuff)
+            return Polynome(varBuff)
         done = False
         for i in self.variables :
             j = i
-            print(i, other)
             if other.degree == i.degree :
-                print(i, other)
                 j = i + other
                 done = True
-                print("j", j)
             varBuff.append(j)
         if done == False :
             varBuff.append(other)
-        print("varbuff: ", varBuff)
         return Polynome(varBuff)
     
     def __radd__(self, other):
         self.__add__(other)
 
     def __mul__(self, other):
-        if type(other) == Reals:
+        if type(other) == Reals or type(other) == Unknown :
+            print(Polynome([i * other for i in self.variables]))
             return Polynome([i * other for i in self.variables])
 
     def __rmul__(self, other):
-        if type(other) == Reals:
-            print(other,[i for i in self.variables], [i * other for i in self.variables])
+        if type(other) == Reals or type(other) == Unknown :
+            print(Polynome([i * other for i in self.variables]))
             return Polynome([i * other for i in self.variables])
 
     def __repr__(self) :
@@ -93,9 +85,9 @@ class Polynome :
         return '{{' + f'{buff}' + '}}'
     
     def __str__(self) :
-        print("hello?")
         varBuff = ''
         count = 0
+        print("??", self.variables)
         for i in self.variables :
             varBuff += (' + ' if i.coefficient >= 0 and count > 0 else ' - ' if count > 0 else '') + str(i)
             count += 1
@@ -124,19 +116,27 @@ class Unknown :
         if type(other) is Unknown :
             if other.name == self.name and other.degree == self.degree :
                 return Unknown(self.name, self.coefficient - other.coefficient, self.degree)
+    
     def __mul__(self, other):
+        if type(other) == Polynome : 
+            return NotImplemented
         if type(other) is Reals:
             return Unknown(self.name, self.coefficient * other.real, self.degree)
+        if type(other) is Unknown and self.name == other.name :
+            return Unknown(self.name, self.coefficient * other.coefficient, self.degree + other.degree)
 
     def __rmul__(self, other):
+        if type(other) == Polynome : 
+            return NotImplemented
         if type(other) is Reals:
             return Unknown(self.name, self.coefficient * other.real, self.degree)
+        if type(other) is Unknown and self.name == other.name :
+            return Unknown(self.name, self.coefficient * other.coefficient, self.degree + other.degree)
     
     def __repr__(self):
         return f'<{self.name},{self.coefficient},{self.degree}>'
 
     def __str__(self):
-        print("hello????")
         return (f'{self.coefficient} * ' if self.coefficient > 1 else '') + f'{self.name}' + (f'^{self.degree}' if self.degree > 1 else '')
     
 class Reals :
@@ -149,7 +149,7 @@ class Reals :
     def __add__(self, other) :
         if type(other) is int:
             return Reals('', self.real + other)
-        if type(other) is Error or type(other) is Matrix or type(other) is Unknown :
+        if other == None or type(other) is Error or type(other) is Matrix or type(other) is Unknown :
             return NotImplemented
         real = self.real + other.real
         if type(other) is Imaginaries :
@@ -183,9 +183,9 @@ class Reals :
         return Reals('sum', real)
     
     def __rmul__(self, other) :
-        if type(other) is Matrix :
+        if type(other) == Matrix or type(other) == Unknown or type(other) == Polynome :
             return NotImplemented
-        if type(other) is Error :
+        if type(other) == Error :
             return Error(other.err_code)
         real = 0
         img = 0
@@ -198,8 +198,7 @@ class Reals :
         return Reals('rmul', real)
     
     def __mul__(self, other) :
-        print("ooo", other)
-        if type(other) is Matrix :
+        if type(other) == Matrix or type(other) == Unknown or type(other) == Polynome :
             return NotImplemented
         if type(other) is Error :
             return Error(other.err_code)
