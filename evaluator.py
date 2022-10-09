@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from variables import Reals, Imaginaries, Matrix, Unknown, Polynome
+from variables import Reals, Imaginaries, Matrix, Unknown, Polynome, Transformation
 from formater import Formater
 from error import Error, SilentError
 
@@ -99,7 +99,7 @@ class Evaluator:
         else :
             while x < len(exp) and ((exp[x] >= 'a' and exp[x] <= 'z') \
                 or (exp[x] >= '0' and exp[x] <= '9') \
-                    or (exp[x] == '{' or exp[x] == '}') or exp[x] == '.' or exp[x] == '-') :
+                    or (exp[x] == '{' or exp[x] == '}') or exp[x] == '.' or exp[x] == '-' or exp[x] == '<' or exp[x] == '>') :
                 buff = buff + exp[x]
                 x = x + 1
         return buff
@@ -128,7 +128,7 @@ class Evaluator:
         right = self.ft_get_argument(exp.rsplit('^', 1)[1])
         buff_left = self.ft_even_bracket(left)
         buff_right = self.ft_even_bracket(right)
-        buff = str(self.ft_eval(buff_left)**self.ft_eval(buff_right))
+        buff = repr(self.ft_eval(buff_left)**self.ft_eval(buff_right))
         return exp.replace(left + '^' + right, buff)
 
     # evaluates any expression and returns a variable
@@ -152,7 +152,8 @@ class Evaluator:
     # recursive parser, works on expression without brackets
     # splits the expression until only variables remain then return the variable, performing the calculation recursively
     def ft_eval_exp(self, exp : str) :
-        print("exp : ", exp)
+
+        print("exp: ", exp)
         if '+' in exp :
             return self.ft_eval_exp(exp.split('+', 1)[1]) + \
                 self.ft_eval_exp(exp.split('+', 1)[0])
@@ -173,17 +174,19 @@ class Evaluator:
                             self.ft_eval_exp(exp.rsplit('**', 1)[1])
                     return self.ft_eval_exp(exp.rsplit('*', 1)[0]) * \
                         self.ft_eval_exp(exp.rsplit('*', 1)[1])
+        if '?' in exp :
+            return Transformation([self.ft_eval_exp(exp.split('$')[0][1:]), self.ft_eval_exp(exp.split('$')[1])], exp.split('$')[2].strip('!'))
         if '{' in exp :
             if '{{' in exp :
                 varBuff = []
                 strBuff = exp.strip().strip('{{').strip('}}').split(';')
                 for i in strBuff :
                     varBuff.append(self.ft_eval_exp(i))
-                    print("varbuff = ", varBuff)
                 return Polynome(varBuff)
             return self.ft_eval_functions(exp)
         if '<' in exp:
-            return Unknown(exp.split(',')[0].strip('<'), int(float(exp.split(',')[1])), int(float(exp.split(',')[2].strip('>'))))
+            exp = exp.strip().split(',')
+            return Unknown(exp[0].strip('<'), int(float(exp[1])), int(float(exp[2].strip('>'))))
         for i in range(len(self.arglist)) :
             if self.arglist[i].name == exp.strip() :
                 return self.arglist[i].copy()
@@ -202,9 +205,63 @@ class Evaluator:
             return Reals('', 0) #Error(16)
         return Reals('', float(''.join(exp.split())))
     
+    @staticmethod
+    def eval_transformation(self, exp) :
+        count = 0
+        i = 0
+        start = 0
+        end = 0
+        while i < len(exp) :
+            if exp[i] =='?' :
+                eval_transformation(exp)
+            i += 1
+        return
+            
+
+    def get_operator(exp) :
+        i = 0
+        while i < len(exp) :
+            if exp[i] == '?' :
+                count += 2
+            if exp[i] == '$' :
+                count -= 1
+            if count == 0 :
+                return exp[i:]
+            i += 1
+
+    def get_second_operand(exp):
+        i = 0
+        end = 0
+        for i in range(len(exp)) :
+            if exp[i] == '?' :
+                count += 2
+            if exp[i] == '$' :
+                if count == 1 :
+                    end = i
+                else :
+                    count -= 1
+        exp = self.get_first_operand(exp[end:])
+        return exp
+
+
+
+    def get_first_operand(self, exp):
+        i = 0
+        end = 0
+        for i in range(len(exp)) :
+            if exp[i] == '?' :
+                count += 2
+            if exp[i] == '$' :
+                if count == 1 :
+                    return exp[1:i]
+                else :
+                    count -= 1
+
+
+
+
     @staticmethod 
     def eval_mat(exp : str) -> list :
-        print("shfezodsjvosqjv", exp)
         mat = list()
         rows = exp.split(';')
         for i in range(len(rows)) :
@@ -212,7 +269,6 @@ class Evaluator:
             for j in range(len(rows[i])) :
                 rows[i][j] = float(rows[i][j])
             mat.append(rows[i])
-        print('sseese', mat)
         return mat
 
     @staticmethod

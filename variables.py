@@ -6,14 +6,95 @@ class Variable :
     pass
 # function should inherit variable, and polynome should inherit function
 
+# A transformation is an operation on an variable that does not fit a polynome 
+class Transformation :
+    def __init__(self, operands, operator):
+        self.operands = operands
+        self.operator = operator
+
+    def __add__(self, other) :
+        return Transformation([self, other], 'add')
+    
+    def __radd__(self, other) :
+        return Transformation([self, other], 'add')
+
+    def __mul__(self, other) :
+        return Transformation([self, other], 'mul')
+
+    def __rmul__(self, other) :
+        return Transformation([self, other], 'mul')
+
+    def __pow__(self, other) :
+        return Transformation([self, other], 'pow')
+    
+    def __rpow__(self, other) :
+        return Transformation([self, other], 'pow')
+    
+    def __mod__(self, other) :
+        return Transformation([self, other], 'mod')
+    
+    def __rmod__(self, other) :
+        return Transformation([self, other], 'mod')
+    
+    def __sub__(self, other) :
+        return Transformation([self, other], 'sub')
+    def __rsub__(self, other) :
+        return Transformation([self, other], 'sub')
+    
+
+
+    def __str__(self) :
+        match self.operator :
+            case 'mod' :
+                buff = '%'
+            case 'mul' :
+                buff = '*'
+            case 'pow' :
+                buff = '^'
+            case 'div' :
+                buff = '/'
+            case 'add' :
+                buff = '+'
+            case 'sub' :
+                buff = '-'
+            case _ :
+                buff = self.operator
+        return str(self.operands[0]) + ' ' + buff + ' ' + str(self.operands[1])
+
+    def __repr__(self) :
+        match self.operator :
+            case '%' :
+                buff = 'mod'
+            case '*' :
+                buff = 'mul'
+            case '^' :
+                buff = 'pow'
+            case '/' :
+                buff = 'div'
+            case '+' :
+                buff = 'add'
+            case '-' :
+                buff = 'sub'
+            case _ :
+                buff = self.operator
+        return '?' + repr(self.operands[0]) + '$' + repr(self.operands[1]) + '$' + self.operator + '!'
+
 class Polynome :
     
     def __init__(self, variables) : # variables are any variable
         self.variables = variables
         self.varBuff = []
-        print("varibales should be set", self.variables)
-        if True in [True if type(i) == Polynome else False for i in self.variables ] :
+        popBuff = []
+        print('variables : ', variables)
+        for i in range(len(self.variables)):
+            if self.variables[i] == 0 or type(self.variables[i]) == None:
+                popBuff.append(i)
+        for i in popBuff :
+            self.variables.pop(i)
+        if True in [True if j.degree == i.degree and j != i else False for i in self.variables for j in self.variables ] :
             self.reduce_polynome()
+
+        #if True in [True if type(i) == Polynome else False for i in self.variables ] :
         #TODO sort coeffs
     
     # variables constructing Polynome can themselves be of type Polynome
@@ -29,7 +110,7 @@ class Polynome :
             if type(var) is not Polynome :
                 varBuff.append(var)
             else :
-                for subVar in var :
+                for subVar in var.variables :
                     varBuff.append(subVar)
         seenDegrees = []
         for i in varBuff :
@@ -37,9 +118,16 @@ class Polynome :
                 return
         for var in varBuff :
             if var.degree not in seenDegrees :
-                retBuff.append(sum([retVar for retVar in varBuff if var.degree == retVar.degree]))
+                if (s := sum([retVar for retVar in varBuff if var.degree == retVar.degree])) != 0 :
+                    retBuff.append(s)
                 seenDegrees.append(var.degree)
-        self.variables = retBuff
+        finalretBuff = []
+        for i in range(len(retBuff)) :
+            if type(retBuff[i]) == Polynome :
+                finalretBuff.append(retBuff[i].variables[0])
+            else :
+                finalretBuff.append(retBuff[i])
+        self.variables = finalretBuff
 
     # x^2 + 2*x - 2 * x^2 + 3*x
     # x + 2 * x
@@ -49,18 +137,20 @@ class Polynome :
         if type(other) is Polynome :
             for i in self.variables :
                 for j in other.variables :
-                    if i.degree == j.degree :
                         varBuff.append(i + j)
             return Polynome(varBuff)
         done = False
         for i in self.variables :
             j = i
-            if other.degree == i.degree :
+            if i != 0 and other.degree == i.degree :
                 j = i + other
                 done = True
-            varBuff.append(j)
+            if j != 0 :
+                varBuff.append(j)
         if done == False :
             varBuff.append(other)
+        if len(varBuff) == 1 :
+            return varBuff[0]
         return Polynome(varBuff)
     
     def __radd__(self, other):
@@ -68,17 +158,23 @@ class Polynome :
 
     def __mul__(self, other):
         if type(other) == Reals or type(other) == Unknown :
-            print(Polynome([i * other for i in self.variables]))
             return Polynome([i * other for i in self.variables])
+        if type(other) is Polynome :
+            return Polynome([i * j for i in self.variables for j in other.variables])
 
     def __rmul__(self, other):
         if type(other) == Reals or type(other) == Unknown :
-            print(Polynome([i * other for i in self.variables]))
             return Polynome([i * other for i in self.variables])
+
+    def __pow__(self, other):
+        if type(other) != Reals :
+            return Transformation([self, other], 'pow')
 
     def __repr__(self) :
         # {{a, b, c}} 
         buff = ''
+        ##if len(self.variables) == 1 :
+        ##    return repr(self.variables[0])
         for i in self.variables :
             buff += repr(i) + ';'
         buff = buff[:-1]
@@ -87,10 +183,13 @@ class Polynome :
     def __str__(self) :
         varBuff = ''
         count = 0
-        print("??", self.variables)
+        skip = 0
         for i in self.variables :
-            varBuff += (' + ' if i.coefficient >= 0 and count > 0 else ' - ' if count > 0 else '') + str(i)
+            varBuff += (' + ' if (i.coefficient != 0 and count != 0) and i.coefficient > 0 and skip != 1  else ' ') + str(i) if i.coefficient != 0 else ''
             count += 1
+            skip = 0
+            if i.coefficient == 0 :
+                skip = 1
         return varBuff
 
 class Unknown :
@@ -113,31 +212,71 @@ class Unknown :
         return Polynome([other, self])
 
     def __sub__(self, other) : #
+        print("other : ", other, " type other : ", type(other) )
+        if type(other) is Unknown :
+            if other.name == self.name and other.degree == self.degree :
+                return Unknown(self.name, other.coefficient - self.coefficient, self.degree)
+        buff = -1 * other
+        print("buff : ", buff)
+        return Polynome([self, buff])
+    
+    def __rsub__(self, other) : #
         if type(other) is Unknown :
             if other.name == self.name and other.degree == self.degree :
                 return Unknown(self.name, self.coefficient - other.coefficient, self.degree)
-    
+        buff = -1 * self
+        return Polynome([other, buff])
+
+    def __radd__(self, other) : # 3 * a + a
+        if type(other) is Unknown :
+            if other.name == self.name and other.degree == self.degree :
+                return Unknown(self.name, self.coefficient + other.coefficient, self.degree)  # error management if coeff type operation not possible?
+
+        return Polynome([other, self])
+
     def __mul__(self, other):
         if type(other) == Polynome : 
             return NotImplemented
+        if type(other) is int or type(other) is float :
+            return Unknown(self.name, self.coefficient * other, self.degree)
         if type(other) is Reals:
             return Unknown(self.name, self.coefficient * other.real, self.degree)
+        if type(other) == Matrix :
+            return Unknown(self.name, self.coefficient * other, self.degree)
         if type(other) is Unknown and self.name == other.name :
             return Unknown(self.name, self.coefficient * other.coefficient, self.degree + other.degree)
 
     def __rmul__(self, other):
         if type(other) == Polynome : 
             return NotImplemented
+        if type(other) == Matrix :
+            return Unknown(self.name, self.coefficient * other, self.degree)
+        if type(other) is int or type(other) is float :
+            return Unknown(self.name, self.coefficient * other, self.degree)
         if type(other) is Reals:
             return Unknown(self.name, self.coefficient * other.real, self.degree)
         if type(other) is Unknown and self.name == other.name :
             return Unknown(self.name, self.coefficient * other.coefficient, self.degree + other.degree)
-    
+    def __pow__(self, other):
+        if type(other) != Reals :
+            return NotImplemented
+        return Unknown(self.name, pow(self.coefficient, other.real), self.degree *  other.real) 
     def __repr__(self):
         return f'<{self.name},{self.coefficient},{self.degree}>'
 
+    def __mod__(self, other) :
+        return Transformation([self, other],  'mod')
+
+    def __rmod__(self, other) :
+        return Transformation([other, self],  'mod')
+
     def __str__(self):
-        return (f'{self.coefficient} * ' if self.coefficient > 1 else '') + f'{self.name}' + (f'^{self.degree}' if self.degree > 1 else '')
+        if self.coefficient == 1 :
+            return (f'{self.name}' + (f'^{self.degree}' if self.degree > 1 else ''))
+        if self.coefficient != 0 :
+            return (f'{self.coefficient} * ' + f'{self.name}' + (f'^{self.degree}' if self.degree > 1 else ''))
+        return '0.0'
+
     
 class Reals :
     def __init__(self, name : str, input : float) -> None :
@@ -167,7 +306,7 @@ class Reals :
         return Reals('sum', real)
 
     def __sub__(self, other) :
-        if type(other) is Error :
+        if type(other) is Error or type(other) is Unknown :
             return NotImplemented
         real = self.real - other.real
         if type(other) is Imaginaries :
@@ -175,7 +314,7 @@ class Reals :
         return Reals('sum', real)
     
     def __rsub__(self, other) :
-        if type(other) is Error :
+        if type(other) is Error or type(other) is Unknown:
             return NotImplemented
         real = other.real - self.real
         if type(other) is Imaginaries :
@@ -183,12 +322,15 @@ class Reals :
         return Reals('sum', real)
     
     def __rmul__(self, other) :
+        print("yes")
         if type(other) == Matrix or type(other) == Unknown or type(other) == Polynome :
             return NotImplemented
         if type(other) == Error :
             return Error(other.err_code)
         real = 0
         img = 0
+        if type(other) is int or type(other) is float :
+            return Reals('', self.real * other)
         if type(other) is Reals :
             real = self.real * other.real
         if type(other) is Imaginaries :
@@ -203,6 +345,8 @@ class Reals :
         if type(other) is Error :
             return Error(other.err_code)
         real, img = 0, 0
+        if type(other) is int or type(other) is float :
+            return Reals('', self.real * other)
         if type(other) is Reals :
             real = self.real * other.real
         if type(other) is Imaginaries :
@@ -214,7 +358,7 @@ class Reals :
     def __truediv__(self, other) :
         if type(other) is Error :
             return NotImplemented
-        if type(other) is (float or int) and other != 0 :
+        if (type(other) is float or type(other) is int) and other != 0 :
             return Reals('', self.real/other)
         elif type(other) is (float or int) and other == 0 :
             return Error(11) 
@@ -240,7 +384,7 @@ class Reals :
         return self
     
     def __mod__(self, other) :
-        if type(other) is Error :
+        if type(other) is Error or type(other) is Unknown :
             return NotImplemented
         if type(other) is (float or int) and other != 0 :
             return Reals('', self.real % other)
@@ -445,12 +589,14 @@ class Matrix :
         return Error(13)
 
     def __mul__(self, other) :
+        real = 1
+        print("other : ", other)
         if type(other) is Matrix :
             return NotImplemented
         mul_mat = self.copy()
         if type(other) is Reals :
             real = other.real
-        if type(other) is (float or int) :
+        if type(other) == float or type(other) == int :
             real = other
         for i in range(len(self.mat)) :
             for j in range(len(self.mat[i])) :
@@ -461,7 +607,7 @@ class Matrix :
         mul_mat = self.copy()
         if type(other) is Reals :
             real = other.real
-        if type(other) is (float or int) :
+        if type(other) == float or type(other) == int :
             real = other
         for i in range(len(self.mat)) :
             for j in range(len(self.mat[i])) :

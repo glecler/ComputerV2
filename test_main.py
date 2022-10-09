@@ -326,7 +326,7 @@ def main():
     print(colors.OKBLUE + '\n--------------------------\n' + colors.ENDC)
     
     print('> f(x) = 2x^2')
-    print(exp := str(interpreter.parse('f(x) = 2x^2')), colors.OK if exp == '2 * x^2' else colors.KO)
+    print(exp := str(interpreter.parse('f(x) = 2x^2')), colors.OK if exp == '2.0 * x^2' else colors.KO)
     print('\n')
 
     print('> g(z) = (3z%2)^(z/30)')

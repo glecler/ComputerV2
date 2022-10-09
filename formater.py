@@ -5,7 +5,6 @@ class Formater :
 
     @staticmethod
     def format_expression(expression : str, functions : list) -> str :
-        print("expression : ", expression)
         output = ''
         print_nb = 0
         print_alpha = 0

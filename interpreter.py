@@ -29,6 +29,7 @@ class Interpreter:
         self.evaluator = Evaluator(self.arglist, self.functions)
         self.formater = Formater()
         self.graph = Graph(self.arglist, self.functions)
+        self.status = "error"
 
     def check_fun_format(self, function : str) :
         pass
@@ -63,8 +64,6 @@ class Interpreter:
             for arg in self.arglist :
                 if exp[i] == arg.name and exp[i] != x_arg and arg.name != 'i' :
                     exp[i] = repr(arg)
-        print("fils de pute", ''.join(exp))
-        print("weird ", self.evaluator.ft_eval_exp(''.join(exp)))
         input = self.formater.format_expression(str(self.evaluator.ft_eval_exp(''.join(exp))), self.functions)
 
         # TODO check right cmd input
@@ -161,7 +160,8 @@ class Interpreter:
     def ft_parse_commands(self, cmd : str) :
         match cmd :
             case 'quit' :
-                return 0
+                self.status = "Exiting"
+                return ''
             case 'var' :
                 return [self.arglist[i].name for i in range(1, len(self.arglist))]
             case 'fun' :
@@ -170,6 +170,9 @@ class Interpreter:
                 return self.graph.graph_min_max(self.functions[0], -20, 20)
             case 'history' :
                 return self.history
+            case _ :
+                self.status = "Error"
+                return Error(0)
 
     def ft_check_parsing(self, cmd : str) :
         if not self.iseven(cmd, '(', ')') :
@@ -191,32 +194,42 @@ class Interpreter:
             return Error(14)
         return True
 
+
+
+
     def parse(self, cmd : str) :
         self.history.append('> ' + cmd)
         cmd = cmd.lower()
         if '=' not in cmd :
             if cmd == 'history' :
-                return self.ft_parse_commands(cmd)
+                self.status = "History of commands"
+                buff = ''
+                for i in self.history :
+                    buff += '\t' + str(i) + '\n'
+                return buff
             cmd = self.ft_parse_commands(cmd)
             self.history.append(str(cmd))
-            return cmd
+            return str(cmd)
         if type(err := self.ft_check_parsing(cmd)) == Error :
             self.history.append(err)
-            return err
+            return str(err)
         if '?' in cmd : # calculation
             cmd = self.parse_eval(cmd)
             self.history.append(str(cmd))
-            return cmd
+            self.status = "Performing a calculation"
+            return str(cmd)
         left_cmd = cmd.split('=')[0].strip()
         right_cmd = cmd.split('=')[1].strip()
         if '(' in left_cmd or ')' in left_cmd :
             cmd = self.parse_function(left_cmd, right_cmd)
             self.history.append(str(cmd))
-            return cmd
+            self.status = "Defining a function"
+            return str(cmd)
         cmd = self.parse_variable(left_cmd, \
                 self.formater.format_expression(right_cmd, self.functions))
         self.history.append(str(cmd))
-        return cmd
+        self.status = "Defining a variable"
+        return str(cmd)
 
     @staticmethod
     def iseven(cmd : str, char_right : str, char_left : str) :
