@@ -1,6 +1,10 @@
 # ComputorV2
 
-Implementation of a command line mathematical parser.
+Implementation of a command line mathematical parser, using python 3.10
+
+```
+> python computorv2.py
+```
 
 ## Assignation
 
